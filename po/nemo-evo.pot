@@ -1,0 +1,103 @@
+# Translations template for nemo-evo.
+# Copyright (C) 2026
+# This file is distributed under the same license as the nemo-evo package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: nemo-evo 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-16 21:00+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Cut"
+msgstr ""
+
+msgid "Copy"
+msgstr ""
+
+msgid "Paste"
+msgstr ""
+
+msgid "Move to Trash"
+msgstr ""
+
+msgid "Delete Permanently"
+msgstr ""
+
+msgid "Undo"
+msgstr ""
+
+msgid "Redo"
+msgstr ""
+
+msgid "Select All"
+msgstr ""
+
+msgid "New Folder"
+msgstr ""
+
+msgid "Cut (Ctrl+X)"
+msgstr ""
+
+msgid "Copy (Ctrl+C)"
+msgstr ""
+
+msgid "Paste (Ctrl+V)"
+msgstr ""
+
+msgid "Move to Trash (Delete)"
+msgstr ""
+
+msgid "Delete Permanently (Shift+Delete)"
+msgstr ""
+
+msgid "Undo (Ctrl+Z)"
+msgstr ""
+
+msgid "Redo (Ctrl+Y)"
+msgstr ""
+
+msgid "Select All (Ctrl+A)"
+msgstr ""
+
+msgid "New Folder (Ctrl+Shift+N)"
+msgstr ""
+
+msgid "Nemo Evo Preferences"
+msgstr ""
+
+msgid "Configure Toolbar Action Buttons for Nemo"
+msgstr ""
+
+msgid "Toolbar Buttons"
+msgstr ""
+
+msgid "Enable or disable buttons to display on the toolbar:"
+msgstr ""
+
+msgid "Toolbar Position"
+msgstr ""
+
+msgid "Right of Address Bar (Recommended)"
+msgstr ""
+
+msgid "Left of Address Bar"
+msgstr ""
+
+msgid "Far Right of Toolbar"
+msgstr ""
+
+msgid "Save & Restart Nemo"
+msgstr ""
+
+msgid "Close"
+msgstr ""
+
+msgid "Configuration saved successfully!"
+msgstr ""

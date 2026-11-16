@@ -1,0 +1,103 @@
+# Italian translations for nemo-evo.
+# Copyright (C) 2026
+# This file is distributed under the same license as the nemo-evo package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: nemo-evo 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-16 21:00+0100\n"
+"PO-Revision-Date: 2026-11-16 21:00+0100\n"
+"Last-Translator: Nemo Evo Developers\n"
+"Language-Team: Italian\n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Cut"
+msgstr "Taglia"
+
+msgid "Copy"
+msgstr "Copia"
+
+msgid "Paste"
+msgstr "Incolla"
+
+msgid "Move to Trash"
+msgstr "Sposta nel cestino"
+
+msgid "Delete Permanently"
+msgstr "Elimina definitivamente"
+
+msgid "Undo"
+msgstr "Annulla"
+
+msgid "Redo"
+msgstr "Ripeti"
+
+msgid "Select All"
+msgstr "Seleziona tutto"
+
+msgid "New Folder"
+msgstr "Nuova cartella"
+
+msgid "Cut (Ctrl+X)"
+msgstr "Taglia (Ctrl+X)"
+
+msgid "Copy (Ctrl+C)"
+msgstr "Copia (Ctrl+C)"
+
+msgid "Paste (Ctrl+V)"
+msgstr "Incolla (Ctrl+V)"
+
+msgid "Move to Trash (Delete)"
+msgstr "Sposta nel cestino (Canc)"
+
+msgid "Delete Permanently (Shift+Delete)"
+msgstr "Elimina definitivamente (Shift+Canc)"
+
+msgid "Undo (Ctrl+Z)"
+msgstr "Annulla (Ctrl+Z)"
+
+msgid "Redo (Ctrl+Y)"
+msgstr "Ripeti (Ctrl+Y)"
+
+msgid "Select All (Ctrl+A)"
+msgstr "Seleziona tutto (Ctrl+A)"
+
+msgid "New Folder (Ctrl+Shift+N)"
+msgstr "Nuova cartella (Ctrl+Shift+N)"
+
+msgid "Nemo Evo Preferences"
+msgstr "Preferenze Nemo Evo"
+
+msgid "Configure Toolbar Action Buttons for Nemo"
+msgstr "Configura i pulsanti d'azione della barra strumenti per Nemo"
+
+msgid "Toolbar Buttons"
+msgstr "Pulsanti della barra strumenti"
+
+msgid "Enable or disable buttons to display on the toolbar:"
+msgstr "Abilita o disabilita i pulsanti da mostrare sulla barra degli strumenti:"
+
+msgid "Toolbar Position"
+msgstr "Posizione sulla barra strumenti"
+
+msgid "Right of Address Bar (Recommended)"
+msgstr "A destra della barra dell'indirizzo (Consigliato)"
+
+msgid "Left of Address Bar"
+msgstr "A sinistra della barra dell'indirizzo"
+
+msgid "Far Right of Toolbar"
+msgstr "In fondo a destra sulla barra"
+
+msgid "Save & Restart Nemo"
+msgstr "Salva e riavvia Nemo"
+
+msgid "Close"
+msgstr "Chiudi"
+
+msgid "Configuration saved successfully!"
+msgstr "Configurazione salvata con successo!"

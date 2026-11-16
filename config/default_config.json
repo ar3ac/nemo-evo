@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "position": "right_of_pathbar",
+  "buttons": [
+    {
+      "id": "cut",
+      "enabled": true,
+      "icon": "edit-cut-symbolic",
+      "shortcut": "Ctrl+X"
+    },
+    {
+      "id": "copy",
+      "enabled": true,
+      "icon": "edit-copy-symbolic",
+      "shortcut": "Ctrl+C"
+    },
+    {
+      "id": "paste",
+      "enabled": true,
+      "icon": "edit-paste-symbolic",
+      "shortcut": "Ctrl+V"
+    },
+    {
+      "id": "trash",
+      "enabled": true,
+      "icon": "user-trash-symbolic",
+      "shortcut": "Canc"
+    },
+    {
+      "id": "delete",
+      "enabled": true,
+      "icon": "edit-delete-symbolic",
+      "shortcut": "Shift+Canc"
+    },
+    {
+      "id": "undo",
+      "enabled": false,
+      "icon": "edit-undo-symbolic",
+      "shortcut": "Ctrl+Z"
+    },
+    {
+      "id": "redo",
+      "enabled": false,
+      "icon": "edit-redo-symbolic",
+      "shortcut": "Ctrl+Y"
+    },
+    {
+      "id": "select_all",
+      "enabled": false,
+      "icon": "edit-select-all-symbolic",
+      "shortcut": "Ctrl+A"
+    },
+    {
+      "id": "new_folder",
+      "enabled": false,
+      "icon": "folder-new-symbolic",
+      "shortcut": "Ctrl+Shift+N"
+    }
+  ]
+}

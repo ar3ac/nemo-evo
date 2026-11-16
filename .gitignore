@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.mo
+.system_generated/
+*.swp
+*.bak

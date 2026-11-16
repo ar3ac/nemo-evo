@@ -1,0 +1,103 @@
+# English translations for nemo-evo.
+# Copyright (C) 2026
+# This file is distributed under the same license as the nemo-evo package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: nemo-evo 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-16 21:00+0100\n"
+"PO-Revision-Date: 2026-11-16 21:00+0100\n"
+"Last-Translator: Nemo Evo Developers\n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Cut"
+msgstr "Cut"
+
+msgid "Copy"
+msgstr "Copy"
+
+msgid "Paste"
+msgstr "Paste"
+
+msgid "Move to Trash"
+msgstr "Move to Trash"
+
+msgid "Delete Permanently"
+msgstr "Delete Permanently"
+
+msgid "Undo"
+msgstr "Undo"
+
+msgid "Redo"
+msgstr "Redo"
+
+msgid "Select All"
+msgstr "Select All"
+
+msgid "New Folder"
+msgstr "New Folder"
+
+msgid "Cut (Ctrl+X)"
+msgstr "Cut (Ctrl+X)"
+
+msgid "Copy (Ctrl+C)"
+msgstr "Copy (Ctrl+C)"
+
+msgid "Paste (Ctrl+V)"
+msgstr "Paste (Ctrl+V)"
+
+msgid "Move to Trash (Delete)"
+msgstr "Move to Trash (Delete)"
+
+msgid "Delete Permanently (Shift+Delete)"
+msgstr "Delete Permanently (Shift+Delete)"
+
+msgid "Undo (Ctrl+Z)"
+msgstr "Undo (Ctrl+Z)"
+
+msgid "Redo (Ctrl+Y)"
+msgstr "Redo (Ctrl+Y)"
+
+msgid "Select All (Ctrl+A)"
+msgstr "Select All (Ctrl+A)"
+
+msgid "New Folder (Ctrl+Shift+N)"
+msgstr "New Folder (Ctrl+Shift+N)"
+
+msgid "Nemo Evo Preferences"
+msgstr "Nemo Evo Preferences"
+
+msgid "Configure Toolbar Action Buttons for Nemo"
+msgstr "Configure Toolbar Action Buttons for Nemo"
+
+msgid "Toolbar Buttons"
+msgstr "Toolbar Buttons"
+
+msgid "Enable or disable buttons to display on the toolbar:"
+msgstr "Enable or disable buttons to display on the toolbar:"
+
+msgid "Toolbar Position"
+msgstr "Toolbar Position"
+
+msgid "Right of Address Bar (Recommended)"
+msgstr "Right of Address Bar (Recommended)"
+
+msgid "Left of Address Bar"
+msgstr "Left of Address Bar"
+
+msgid "Far Right of Toolbar"
+msgstr "Far Right of Toolbar"
+
+msgid "Save & Restart Nemo"
+msgstr "Save & Restart Nemo"
+
+msgid "Close"
+msgstr "Close"
+
+msgid "Configuration saved successfully!"
+msgstr "Configuration saved successfully!"

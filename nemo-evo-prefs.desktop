@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Nemo Evo Preferences
+Name[it]=Preferenze Nemo Evo
+Comment=Configure toolbar action buttons for Nemo file manager
+Comment[it]=Configura i pulsanti d'azione della barra strumenti per il gestore file Nemo
+Exec=python3 /home/ar3ac/projects/nemo_evo/nemo_evo_prefs.py
+Icon=system-file-manager
+Terminal=false
+Categories=Settings;DesktopSettings;GTK;
+Keywords=nemo;toolbar;buttons;cut;copy;paste;trash;delete;filemanager;
