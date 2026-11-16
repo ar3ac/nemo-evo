@@ -14,12 +14,57 @@ import os
 import json
 import gettext
 import locale
+import ctypes
 
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
 gi.require_version('Nemo', '3.0')
-from gi.repository import GObject, Nemo, Gtk, Gdk
+from gi.repository import GObject, Nemo, Gtk, Gdk, GLib
+
+# ----------------------------------------------------------------------
+# X11 XTest Direct Hardware Keyboard Emulation
+# ----------------------------------------------------------------------
+try:
+    _x11 = ctypes.CDLL('libX11.so.6')
+    _xtst = ctypes.CDLL('libXtst.so.6')
+    _x11.XStringToKeysym.restype = ctypes.c_ulong
+    _x11.XKeysymToKeycode.restype = ctypes.c_ubyte
+    _HAS_XTEST = True
+except Exception as e:
+    _HAS_XTEST = False
+
+def send_x11_shortcut(*keysym_names):
+    """Sends authentic hardware keyboard shortcut to the active window via X11 XTest."""
+    if not _HAS_XTEST:
+        return False
+    d = _x11.XOpenDisplay(None)
+    if not d:
+        return False
+    try:
+        codes = []
+        for name in keysym_names:
+            sym = _x11.XStringToKeysym(name.encode('ascii'))
+            if sym:
+                code = _x11.XKeysymToKeycode(d, sym)
+                if code:
+                    codes.append(code)
+
+        if not codes:
+            return False
+
+        # Press keys in order
+        for c in codes:
+            _xtst.XTestFakeKeyEvent(d, c, True, 0)
+        _x11.XFlush(d)
+
+        # Release keys in reverse order
+        for c in reversed(codes):
+            _xtst.XTestFakeKeyEvent(d, c, False, 0)
+        _x11.XFlush(d)
+        return True
+    finally:
+        _x11.XCloseDisplay(d)
 
 # ----------------------------------------------------------------------
 # Internationalization (i18n)
@@ -42,7 +87,7 @@ try:
         locale.bindtextdomain(TEXTDOMAIN, LOCALEDIR)
         gettext.bindtextdomain(TEXTDOMAIN, LOCALEDIR)
     gettext.textdomain(TEXTDOMAIN)
-except Exception as e:
+except Exception:
     pass
 
 _ = gettext.gettext
@@ -83,7 +128,6 @@ def load_config():
         except Exception as e:
             print(f"[NemoEvo] Error loading config: {e}, falling back to defaults")
 
-    # If file doesn't exist, create it with default configuration
     try:
         with open(CONFIG_PATH, "w", encoding="utf-8") as f:
             json.dump(DEFAULT_CONFIG, f, indent=2, ensure_ascii=False)
@@ -93,30 +137,8 @@ def load_config():
     return DEFAULT_CONFIG
 
 # ----------------------------------------------------------------------
-# Helper Utilities
+# View Helpers
 # ----------------------------------------------------------------------
-def send_key(window, keyval, state=0):
-    """Synthesize a hardware key event sent to GDK event loop."""
-    seat = Gdk.Display.get_default().get_default_seat()
-    dev = seat.get_keyboard() if seat else None
-    gdk_win = window.get_window()
-
-    ev_press = Gdk.Event.new(Gdk.EventType.KEY_PRESS)
-    ev_press.keyval = keyval
-    ev_press.state = state
-    ev_press.window = gdk_win
-    if dev:
-        ev_press.set_device(dev)
-    ev_press.put()
-
-    ev_release = Gdk.Event.new(Gdk.EventType.KEY_RELEASE)
-    ev_release.keyval = keyval
-    ev_release.state = state
-    ev_release.window = gdk_win
-    if dev:
-        ev_release.set_device(dev)
-    ev_release.put()
-
 def find_active_view(window):
     """Find the active NemoView in the given window."""
     focus = window.get_focus()
@@ -141,12 +163,28 @@ def find_active_view(window):
     return scan(window)
 
 def ensure_view_focus(window):
-    """Ensure focus is on the file view unless user is in an entry/input widget."""
+    """Ensure focus remains on the file view unless user is in an entry/search field."""
     focus = window.get_focus()
     if focus and isinstance(focus, Gtk.Entry):
         return
     view = find_active_view(window)
-    if view and hasattr(view, "grab_focus"):
+    if not view:
+        return
+
+    def find_inner_focusable(w):
+        if isinstance(w, Gtk.TreeView) or 'IconContainer' in GObject.type_name(w):
+            return w
+        if isinstance(w, Gtk.Container):
+            for c in w.get_children():
+                res = find_inner_focusable(c)
+                if res:
+                    return res
+        return None
+
+    inner = find_inner_focusable(view)
+    if inner and hasattr(inner, "grab_focus"):
+        inner.grab_focus()
+    elif hasattr(view, "grab_focus"):
         view.grab_focus()
 
 # ----------------------------------------------------------------------
@@ -174,10 +212,8 @@ class NemoEvoExtension(GObject.GObject, Nemo.LocationWidgetProvider, Nemo.NameAn
             return None
         window._nemo_evo_injected = True
 
-        # Reload config in case it changed
         self.config = load_config()
 
-        # Find primary toolbar
         toolbar = self._find_primary_toolbar(window)
         if not toolbar:
             return None
@@ -210,19 +246,23 @@ class NemoEvoExtension(GObject.GObject, Nemo.LocationWidgetProvider, Nemo.NameAn
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
         tool_item.add(box)
 
-        # Definitions of button metadata and handlers
+        # Action handlers with focus preservation and X11 / GObject dispatch
+        def trigger_shortcut(*keys):
+            ensure_view_focus(window)
+            GLib.idle_add(lambda: send_x11_shortcut(*keys))
+
         button_definitions = {
             "cut": {
                 "label": _("Cut (Ctrl+X)"),
-                "handler": lambda btn: (ensure_view_focus(window), send_key(window, Gdk.KEY_x, Gdk.ModifierType.CONTROL_MASK))
+                "handler": lambda btn: trigger_shortcut("Control_L", "x")
             },
             "copy": {
                 "label": _("Copy (Ctrl+C)"),
-                "handler": lambda btn: (ensure_view_focus(window), send_key(window, Gdk.KEY_c, Gdk.ModifierType.CONTROL_MASK))
+                "handler": lambda btn: trigger_shortcut("Control_L", "c")
             },
             "paste": {
                 "label": _("Paste (Ctrl+V)"),
-                "handler": lambda btn: (ensure_view_focus(window), send_key(window, Gdk.KEY_v, Gdk.ModifierType.CONTROL_MASK))
+                "handler": lambda btn: trigger_shortcut("Control_L", "v")
             },
             "trash": {
                 "label": _("Move to Trash (Delete)"),
@@ -234,19 +274,19 @@ class NemoEvoExtension(GObject.GObject, Nemo.LocationWidgetProvider, Nemo.NameAn
             },
             "undo": {
                 "label": _("Undo (Ctrl+Z)"),
-                "handler": lambda btn: (ensure_view_focus(window), send_key(window, Gdk.KEY_z, Gdk.ModifierType.CONTROL_MASK))
+                "handler": lambda btn: trigger_shortcut("Control_L", "z")
             },
             "redo": {
                 "label": _("Redo (Ctrl+Y)"),
-                "handler": lambda btn: (ensure_view_focus(window), send_key(window, Gdk.KEY_y, Gdk.ModifierType.CONTROL_MASK))
+                "handler": lambda btn: trigger_shortcut("Control_L", "y")
             },
             "select_all": {
                 "label": _("Select All (Ctrl+A)"),
-                "handler": lambda btn: (ensure_view_focus(window), send_key(window, Gdk.KEY_a, Gdk.ModifierType.CONTROL_MASK))
+                "handler": lambda btn: trigger_shortcut("Control_L", "a")
             },
             "new_folder": {
                 "label": _("New Folder (Ctrl+Shift+N)"),
-                "handler": lambda btn: (ensure_view_focus(window), send_key(window, Gdk.KEY_n, Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.SHIFT_MASK))
+                "handler": lambda btn: trigger_shortcut("Control_L", "Shift_L", "n")
             }
         }
 
@@ -290,7 +330,6 @@ class NemoEvoExtension(GObject.GObject, Nemo.LocationWidgetProvider, Nemo.NameAn
                 toolbar.insert(tool_item, -1)
 
     def _find_pathbar_tool_item_index(self, toolbar):
-        """Locates the GtkToolItem that contains the GtkStack/PathBar."""
         def contains_stack(container):
             if isinstance(container, Gtk.Stack):
                 return True
@@ -314,7 +353,7 @@ class NemoEvoExtension(GObject.GObject, Nemo.LocationWidgetProvider, Nemo.NameAn
                 return
             except Exception:
                 pass
-        send_key(window, Gdk.KEY_Delete, 0)
+        send_x11_shortcut("Delete")
 
     def _handle_delete(self, window):
         ensure_view_focus(window)
@@ -325,4 +364,4 @@ class NemoEvoExtension(GObject.GObject, Nemo.LocationWidgetProvider, Nemo.NameAn
                 return
             except Exception:
                 pass
-        send_key(window, Gdk.KEY_Delete, Gdk.ModifierType.SHIFT_MASK)
+        send_x11_shortcut("Shift_L", "Delete")
