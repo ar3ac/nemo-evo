@@ -52,27 +52,44 @@ python3 /path/to/nemo_evo/nemo_evo_prefs.py
 
 ## 📦 Installation
 
-### Prerequisites
-Make sure `python3-nemo` (or `python-nemo`) is installed on your Linux Mint system:
+### Method 1: Debian Package (.deb) — Recommended for Users
+Download the latest `.deb` package from the [Releases](https://github.com/ar3ac/nemo-evo/releases) page and install it:
 ```bash
 sudo apt update
-sudo apt install python-nemo
+sudo apt install ./nemo-evo_1.0.0_all.deb
 ```
+Or simply double-click the downloaded `.deb` file to install via GDebi / Linux Mint Package Installer.
 
-### Quick Install
-Clone the repository and run the installation script:
+---
+
+### Method 2: User-Level Install (from source)
+If you prefer running from source or want to modify the code:
 ```bash
-git clone https://github.com/ar3ac/nemo_evo.git
-cd nemo_evo
+# 1. Install prerequisite if not already present
+sudo apt update
+sudo apt install python-nemo
+
+# 2. Clone repository & run installer
+git clone https://github.com/ar3ac/nemo-evo.git
+cd nemo-evo
 ./install.sh
 ```
 
-The script will:
-1. Compile gettext localization catalogs (`.mo`).
-2. Symlink the extension into `~/.local/share/nemo-python/extensions/`.
-3. Install the desktop menu launcher into `~/.local/share/applications/`.
-4. Initialize the default configuration at `~/.config/nemo_evo/config.json`.
-5. Restart Nemo to apply changes immediately.
+The installer script:
+1. Compiles gettext localization catalogs (`.mo`).
+2. Symlinks the extension into `~/.local/share/nemo-python/extensions/`.
+3. Installs the desktop preferences launcher into `~/.local/share/applications/`.
+4. Initializes the default configuration at `~/.config/nemo_evo/config.json`.
+5. Restarts Nemo to apply changes immediately.
+
+---
+
+### 🔨 Building the Package (.deb)
+To build your own Debian package from source:
+```bash
+./build_deb.sh
+```
+The output package will be generated under `dist/nemo-evo_1.0.0_all.deb`.
 
 ---
 
