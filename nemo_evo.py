@@ -4,7 +4,7 @@
 """
 Nemo Evo - Customizable Action Buttons Toolbar Extension for Nemo File Manager.
 Adds Cut, Copy, Paste, Trash, Delete, and other configurable action buttons
-directly next to Nemo's address / path bar.
+directly next to Nemo's address / path bar using native Nemo GtkActions.
 
 Copyright (C) 2026 Nemo Evo Developers
 License: GPL-3.0-or-later
@@ -18,80 +18,58 @@ import ctypes
 
 import gi
 gi.require_version('Gtk', '3.0')
-gi.require_version('Gdk', '3.0')
 gi.require_version('Nemo', '3.0')
-from gi.repository import GObject, Nemo, Gtk, Gdk, GLib
+from gi.repository import GObject, Nemo, Gtk, GLib
 
 # ----------------------------------------------------------------------
-# X11 XTest Direct Hardware Keyboard Emulation (64-bit safe)
+# Native GTK & Nemo Action Dispatcher
 # ----------------------------------------------------------------------
-_x11 = None
-_xtst = None
-_HAS_XTEST = False
+libgtk = ctypes.CDLL('libgtk-3.so.0')
 
-try:
-    _x11 = ctypes.CDLL('libX11.so.6')
-    _xtst = ctypes.CDLL('libXtst.so.6')
+libgtk.gtk_ui_manager_get_action_groups.restype = ctypes.c_void_p
+libgtk.gtk_ui_manager_get_action_groups.argtypes = [ctypes.c_void_p]
 
-    # Strictly define 64-bit argument and return types to prevent pointer truncation
-    _x11.XOpenDisplay.restype = ctypes.c_void_p
-    _x11.XOpenDisplay.argtypes = [ctypes.c_char_p]
+libgtk.gtk_action_group_get_action.restype = ctypes.c_void_p
+libgtk.gtk_action_group_get_action.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
 
-    _x11.XCloseDisplay.restype = ctypes.c_int
-    _x11.XCloseDisplay.argtypes = [ctypes.c_void_p]
+libgtk.gtk_action_activate.argtypes = [ctypes.c_void_p]
+libgtk.gtk_action_get_sensitive.restype = ctypes.c_int
+libgtk.gtk_action_get_sensitive.argtypes = [ctypes.c_void_p]
 
-    _x11.XFlush.restype = ctypes.c_int
-    _x11.XFlush.argtypes = [ctypes.c_void_p]
-
-    _x11.XStringToKeysym.restype = ctypes.c_ulong
-    _x11.XStringToKeysym.argtypes = [ctypes.c_char_p]
-
-    _x11.XKeysymToKeycode.restype = ctypes.c_ubyte
-    _x11.XKeysymToKeycode.argtypes = [ctypes.c_void_p, ctypes.c_ulong]
-
-    _xtst.XTestFakeKeyEvent.restype = ctypes.c_int
-    _xtst.XTestFakeKeyEvent.argtypes = [ctypes.c_void_p, ctypes.c_uint, ctypes.c_int, ctypes.c_ulong]
-
-    _HAS_XTEST = True
-except Exception as e:
-    print(f"[NemoEvo] XTest initialization warning: {e}")
-    _HAS_XTEST = False
-
-def send_x11_shortcut(*keysym_names):
-    """Sends authentic hardware keyboard shortcut via X11 XTest safely."""
-    if not _HAS_XTEST or not _x11 or not _xtst:
-        return False
+def get_nemo_action(window, action_name):
+    """Retrieves the live GtkAction pointer from Nemo's internal UIManager."""
     try:
-        d = _x11.XOpenDisplay(None)
-        if not d:
-            return False
-        try:
-            codes = []
-            for name in keysym_names:
-                sym = _x11.XStringToKeysym(name.encode('ascii'))
-                if sym:
-                    code = _x11.XKeysymToKeycode(d, sym)
-                    if code:
-                        codes.append(code)
+        win_ptr = hash(window)
+        # In NemoWindow (x86_64), details pointer is at offset 64 (after GtkApplicationWindow)
+        details_ptr = ctypes.c_void_p.from_address(win_ptr + 64).value
+        if not details_ptr:
+            return None
 
-            if not codes:
-                return False
+        # In NemoWindowDetails, ui_manager is at offset 24
+        uim_ptr = ctypes.c_void_p.from_address(details_ptr + 24).value
+        if not uim_ptr:
+            return None
 
-            # Press keys in order
-            for c in codes:
-                _xtst.XTestFakeKeyEvent(d, c, True, 0)
-            _x11.XFlush(d)
-
-            # Release keys in reverse order
-            for c in reversed(codes):
-                _xtst.XTestFakeKeyEvent(d, c, False, 0)
-            _x11.XFlush(d)
-            return True
-        finally:
-            _x11.XCloseDisplay(d)
+        # Search action groups registered in UIManager (DirViewActions, ShellActions, etc.)
+        curr = libgtk.gtk_ui_manager_get_action_groups(uim_ptr)
+        while curr:
+            grp_ptr = ctypes.c_void_p.from_address(curr).value
+            if grp_ptr:
+                act_ptr = libgtk.gtk_action_group_get_action(grp_ptr, action_name.encode('ascii'))
+                if act_ptr:
+                    return act_ptr
+            curr = ctypes.c_void_p.from_address(curr + 8).value
     except Exception as e:
-        print(f"[NemoEvo] Error sending shortcut {keysym_names}: {e}")
-        return False
+        print(f"[NemoEvo] Error resolving action {action_name}: {e}")
+    return None
+
+def activate_nemo_action(window, action_name):
+    """Executes Nemo's native C callback for the given action without any keyboard simulation."""
+    act_ptr = get_nemo_action(window, action_name)
+    if act_ptr:
+        libgtk.gtk_action_activate(act_ptr)
+        return True
+    return False
 
 # ----------------------------------------------------------------------
 # Internationalization (i18n)
@@ -248,22 +226,19 @@ class NemoEvoExtension(GObject.GObject, Nemo.LocationWidgetProvider, Nemo.NameAn
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
         tool_item.add(box)
 
-        # Trigger shortcut safely in idle callback
-        def trigger_shortcut(*keys):
-            GLib.idle_add(send_x11_shortcut, *keys)
-
+        # Mapping of button IDs to their native Nemo action names
         button_definitions = {
             "cut": {
                 "label": _("Cut (Ctrl+X)"),
-                "handler": lambda btn: trigger_shortcut("Control_L", "x")
+                "handler": lambda btn: activate_nemo_action(window, "Cut")
             },
             "copy": {
                 "label": _("Copy (Ctrl+C)"),
-                "handler": lambda btn: trigger_shortcut("Control_L", "c")
+                "handler": lambda btn: activate_nemo_action(window, "Copy")
             },
             "paste": {
                 "label": _("Paste (Ctrl+V)"),
-                "handler": lambda btn: trigger_shortcut("Control_L", "v")
+                "handler": lambda btn: activate_nemo_action(window, "Paste")
             },
             "trash": {
                 "label": _("Move to Trash (Delete)"),
@@ -275,19 +250,19 @@ class NemoEvoExtension(GObject.GObject, Nemo.LocationWidgetProvider, Nemo.NameAn
             },
             "undo": {
                 "label": _("Undo (Ctrl+Z)"),
-                "handler": lambda btn: trigger_shortcut("Control_L", "z")
+                "handler": lambda btn: activate_nemo_action(window, "Undo")
             },
             "redo": {
                 "label": _("Redo (Ctrl+Y)"),
-                "handler": lambda btn: trigger_shortcut("Control_L", "y")
+                "handler": lambda btn: activate_nemo_action(window, "Redo")
             },
             "select_all": {
                 "label": _("Select All (Ctrl+A)"),
-                "handler": lambda btn: trigger_shortcut("Control_L", "a")
+                "handler": lambda btn: activate_nemo_action(window, "Select All")
             },
             "new_folder": {
                 "label": _("New Folder (Ctrl+Shift+N)"),
-                "handler": lambda btn: trigger_shortcut("Control_L", "Shift_L", "n")
+                "handler": lambda btn: activate_nemo_action(window, "New Folder")
             }
         }
 
@@ -353,7 +328,7 @@ class NemoEvoExtension(GObject.GObject, Nemo.LocationWidgetProvider, Nemo.NameAn
                 return
             except Exception:
                 pass
-        send_x11_shortcut("Delete")
+        activate_nemo_action(window, "Trash")
 
     def _handle_delete(self, window):
         view = find_active_view(window)
@@ -363,4 +338,4 @@ class NemoEvoExtension(GObject.GObject, Nemo.LocationWidgetProvider, Nemo.NameAn
                 return
             except Exception:
                 pass
-        send_x11_shortcut("Shift_L", "Delete")
+        activate_nemo_action(window, "Delete")
