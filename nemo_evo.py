@@ -23,48 +23,75 @@ gi.require_version('Nemo', '3.0')
 from gi.repository import GObject, Nemo, Gtk, Gdk, GLib
 
 # ----------------------------------------------------------------------
-# X11 XTest Direct Hardware Keyboard Emulation
+# X11 XTest Direct Hardware Keyboard Emulation (64-bit safe)
 # ----------------------------------------------------------------------
+_x11 = None
+_xtst = None
+_HAS_XTEST = False
+
 try:
     _x11 = ctypes.CDLL('libX11.so.6')
     _xtst = ctypes.CDLL('libXtst.so.6')
+
+    # Strictly define 64-bit argument and return types to prevent pointer truncation
+    _x11.XOpenDisplay.restype = ctypes.c_void_p
+    _x11.XOpenDisplay.argtypes = [ctypes.c_char_p]
+
+    _x11.XCloseDisplay.restype = ctypes.c_int
+    _x11.XCloseDisplay.argtypes = [ctypes.c_void_p]
+
+    _x11.XFlush.restype = ctypes.c_int
+    _x11.XFlush.argtypes = [ctypes.c_void_p]
+
     _x11.XStringToKeysym.restype = ctypes.c_ulong
+    _x11.XStringToKeysym.argtypes = [ctypes.c_char_p]
+
     _x11.XKeysymToKeycode.restype = ctypes.c_ubyte
+    _x11.XKeysymToKeycode.argtypes = [ctypes.c_void_p, ctypes.c_ulong]
+
+    _xtst.XTestFakeKeyEvent.restype = ctypes.c_int
+    _xtst.XTestFakeKeyEvent.argtypes = [ctypes.c_void_p, ctypes.c_uint, ctypes.c_int, ctypes.c_ulong]
+
     _HAS_XTEST = True
 except Exception as e:
+    print(f"[NemoEvo] XTest initialization warning: {e}")
     _HAS_XTEST = False
 
 def send_x11_shortcut(*keysym_names):
-    """Sends authentic hardware keyboard shortcut to the active window via X11 XTest."""
-    if not _HAS_XTEST:
-        return False
-    d = _x11.XOpenDisplay(None)
-    if not d:
+    """Sends authentic hardware keyboard shortcut via X11 XTest safely."""
+    if not _HAS_XTEST or not _x11 or not _xtst:
         return False
     try:
-        codes = []
-        for name in keysym_names:
-            sym = _x11.XStringToKeysym(name.encode('ascii'))
-            if sym:
-                code = _x11.XKeysymToKeycode(d, sym)
-                if code:
-                    codes.append(code)
-
-        if not codes:
+        d = _x11.XOpenDisplay(None)
+        if not d:
             return False
+        try:
+            codes = []
+            for name in keysym_names:
+                sym = _x11.XStringToKeysym(name.encode('ascii'))
+                if sym:
+                    code = _x11.XKeysymToKeycode(d, sym)
+                    if code:
+                        codes.append(code)
 
-        # Press keys in order
-        for c in codes:
-            _xtst.XTestFakeKeyEvent(d, c, True, 0)
-        _x11.XFlush(d)
+            if not codes:
+                return False
 
-        # Release keys in reverse order
-        for c in reversed(codes):
-            _xtst.XTestFakeKeyEvent(d, c, False, 0)
-        _x11.XFlush(d)
-        return True
-    finally:
-        _x11.XCloseDisplay(d)
+            # Press keys in order
+            for c in codes:
+                _xtst.XTestFakeKeyEvent(d, c, True, 0)
+            _x11.XFlush(d)
+
+            # Release keys in reverse order
+            for c in reversed(codes):
+                _xtst.XTestFakeKeyEvent(d, c, False, 0)
+            _x11.XFlush(d)
+            return True
+        finally:
+            _x11.XCloseDisplay(d)
+    except Exception as e:
+        print(f"[NemoEvo] Error sending shortcut {keysym_names}: {e}")
+        return False
 
 # ----------------------------------------------------------------------
 # Internationalization (i18n)
@@ -162,31 +189,6 @@ def find_active_view(window):
 
     return scan(window)
 
-def ensure_view_focus(window):
-    """Ensure focus remains on the file view unless user is in an entry/search field."""
-    focus = window.get_focus()
-    if focus and isinstance(focus, Gtk.Entry):
-        return
-    view = find_active_view(window)
-    if not view:
-        return
-
-    def find_inner_focusable(w):
-        if isinstance(w, Gtk.TreeView) or 'IconContainer' in GObject.type_name(w):
-            return w
-        if isinstance(w, Gtk.Container):
-            for c in w.get_children():
-                res = find_inner_focusable(c)
-                if res:
-                    return res
-        return None
-
-    inner = find_inner_focusable(view)
-    if inner and hasattr(inner, "grab_focus"):
-        inner.grab_focus()
-    elif hasattr(view, "grab_focus"):
-        view.grab_focus()
-
 # ----------------------------------------------------------------------
 # Nemo Extension Implementation
 # ----------------------------------------------------------------------
@@ -246,10 +248,9 @@ class NemoEvoExtension(GObject.GObject, Nemo.LocationWidgetProvider, Nemo.NameAn
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
         tool_item.add(box)
 
-        # Action handlers with focus preservation and X11 / GObject dispatch
+        # Trigger shortcut safely in idle callback
         def trigger_shortcut(*keys):
-            ensure_view_focus(window)
-            GLib.idle_add(lambda: send_x11_shortcut(*keys))
+            GLib.idle_add(send_x11_shortcut, *keys)
 
         button_definitions = {
             "cut": {
@@ -345,7 +346,6 @@ class NemoEvoExtension(GObject.GObject, Nemo.LocationWidgetProvider, Nemo.NameAn
         return -1
 
     def _handle_trash(self, window):
-        ensure_view_focus(window)
         view = find_active_view(window)
         if view:
             try:
@@ -356,7 +356,6 @@ class NemoEvoExtension(GObject.GObject, Nemo.LocationWidgetProvider, Nemo.NameAn
         send_x11_shortcut("Delete")
 
     def _handle_delete(self, window):
-        ensure_view_focus(window)
         view = find_active_view(window)
         if view:
             try:
