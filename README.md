@@ -1,5 +1,8 @@
 # Nemo Evo 🚀
 
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Support on Ko-fi](https://img.shields.io/badge/Ko--fi-Support-29abe0?style=flat&logo=ko-fi&logoColor=white)](https://ko-fi.com/ar3ac)
+
 Customizable action buttons toolbar extension for the **Nemo File Manager** on **Linux Mint (Cinnamon)**.
 
 ![Nemo Toolbar with Action Buttons](assets/screenshot_toolbar.png)
@@ -141,6 +144,14 @@ To compile translations manually:
 msgfmt po/it.po -o locale/it/LC_MESSAGES/nemo-evo.mo
 msgfmt po/en.po -o locale/en/LC_MESSAGES/nemo-evo.mo
 ```
+
+---
+
+## ☕ Support
+
+If you find **Nemo Evo** helpful and it improves your daily workflow on Linux Mint, feel free to support its development:
+
+<a href="https://ko-fi.com/ar3ac" target="_blank"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support on Ko-fi" style="height: 42px !important;"></a>
 
 ---
 
