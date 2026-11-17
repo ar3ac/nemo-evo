@@ -115,7 +115,7 @@ chmod 755 "${BUILD_ROOT}/DEBIAN/postrm"
 
 # 7. Build package
 echo "-> Building .deb package..."
-dpkg-deb --build "${BUILD_ROOT}" "${DIST_DIR}/${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
+dpkg-deb --root-owner-group --build "${BUILD_ROOT}" "${DIST_DIR}/${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
 
 echo "=== Build finished successfully! ==="
 echo "Package output: ${DIST_DIR}/${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"

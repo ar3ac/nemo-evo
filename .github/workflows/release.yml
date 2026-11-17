@@ -4,10 +4,13 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -23,7 +26,7 @@ jobs:
           chmod +x build_deb.sh
           ./build_deb.sh
 
-      - name: Create GitHub Release
+      - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*.deb
